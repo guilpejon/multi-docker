@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t guilpejon/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run guilpejon/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t guilpejon/multi-client ./client
+  - docker build -t guilpejon/multi-nginx ./nginx
+  - docker build -t guilpejon/multi-server ./server
+  - docker build -t guilpejon/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take these images and push them to docker hub
+  - docker push guilpejon/multi-client
+  - docker push guilpejon/multi-nginx
+  - docker push guilpejon/multi-server
+  - docker push guilpejon/multi-worker
